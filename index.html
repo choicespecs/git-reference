@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git Reference</title>
+<meta name="description" content="A practical, searchable reference for Git — from first commit to bisect, reflog, worktrees and history rewriting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --surface-2: #f3f1ed;
+  --text: #1d1b18;
+  --muted: #6b665e;
+  --border: #e4e0d8;
+  --accent: #e5532d;
+  --accent-soft: #fde9e3;
+  --code-bg: #f6f4f0;
+  --code-text: #2b2823;
+  --cmt: #8a847a;
+  --ok: #2f7d4f;
+  --warn: #b25b00;
+  --warn-soft: #fff3e3;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141311;
+    --surface: #1c1b18;
+    --surface-2: #24221f;
+    --text: #ece8e1;
+    --muted: #a39d93;
+    --border: #33302b;
+    --accent: #ff7a55;
+    --accent-soft: #3a2119;
+    --code-bg: #1f1d1a;
+    --code-text: #e6e1d8;
+    --cmt: #8c867c;
+    --ok: #6cc28f;
+    --warn: #f0a050;
+    --warn-soft: #2e2214;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1c1b18;
+  --surface-2: #24221f;
+  --text: #ece8e1;
+  --muted: #a39d93;
+  --border: #33302b;
+  --accent: #ff7a55;
+  --accent-soft: #3a2119;
+  --code-bg: #1f1d1a;
+  --code-text: #e6e1d8;
+  --cmt: #8c867c;
+  --ok: #6cc28f;
+  --warn: #f0a050;
+  --warn-soft: #2e2214;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+:not(pre) > code {
+  background: var(--surface-2);
+  padding: .1em .38em;
+  border-radius: 4px;
+  font-size: .88em;
+}
+
+/* Top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 24px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; color: var(--text); white-space: nowrap; }
+.brand svg { width: 26px; height: 26px; }
+.search { flex: 1; max-width: 460px; position: relative; }
+.search input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-size: 14px;
+}
+.search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+.search kbd {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font: 12px "JetBrains Mono", monospace; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 5px;
+}
+.spacer { flex: 1; }
+.icon-btn {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+  display: grid; place-items: center;
+}
+.icon-btn svg { width: 18px; height: 18px; }
+.menu-btn { display: none; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); max-width: 1280px; margin: 0 auto; }
+nav.side {
+  position: sticky; top: 61px; height: calc(100vh - 61px); overflow-y: auto;
+  padding: 24px 16px 40px 24px;
+  border-right: 1px solid var(--border);
+}
+nav.side h4 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 20px 0 6px 8px; }
+nav.side h4:first-child { margin-top: 0; }
+nav.side a {
+  display: block; padding: 5px 8px; border-radius: 6px;
+  color: var(--text); font-size: 14px;
+}
+nav.side a:hover { background: var(--surface-2); text-decoration: none; }
+nav.side a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+main { padding: 40px 48px 120px; min-width: 0; }
+
+/* Hero */
+.hero { padding: 8px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+.hero h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--muted); font-size: 18px; max-width: 640px; margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+
+/* Sections */
+section { margin-bottom: 64px; }
+section > h2 {
+  font-size: 28px; letter-spacing: -.01em; margin: 0 0 8px;
+  display: flex; align-items: baseline; gap: 10px;
+}
+section > h2 .num { font: 500 14px "JetBrains Mono", monospace; color: var(--accent); }
+section > p.lead { color: var(--muted); margin: 0 0 24px; max-width: 720px; }
+h3 { font-size: 18px; margin: 32px 0 10px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 18px; box-shadow: var(--shadow);
+}
+.card h3 { margin: 0 0 4px; font-size: 15px; }
+.card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+
+/* Code */
+.code { position: relative; }
+pre {
+  margin: 0; padding: 12px 14px; border-radius: 8px;
+  background: var(--code-bg); color: var(--code-text);
+  font-size: 13px; line-height: 1.65; overflow-x: auto;
+  border: 1px solid var(--border);
+}
+pre .c { color: var(--cmt); }
+pre .p { color: var(--accent); user-select: none; }
+.copy {
+  position: absolute; top: 6px; right: 6px;
+  font: 500 11px Inter, sans-serif; padding: 3px 8px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.code:hover .copy, .copy:focus { opacity: 1; }
+.copy.done { color: var(--ok); }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+td code { white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+
+/* Callouts */
+.note, .warn {
+  border-left: 3px solid var(--accent); background: var(--accent-soft);
+  padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.warn { border-color: var(--warn); background: var(--warn-soft); }
+.note strong, .warn strong { display: block; margin-bottom: 2px; }
+
+/* Diagrams */
+.diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0 24px; overflow-x: auto; }
+.diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.diagram text { font-family: Inter, sans-serif; fill: var(--text); }
+.diagram .lbl { font-size: 13px; font-weight: 600; }
+.diagram .sub { font-size: 11px; fill: var(--muted); }
+.diagram .box { fill: var(--surface-2); stroke: var(--border); }
+.diagram .arrow { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.diagram .arrow-t { font-family: "JetBrains Mono", monospace; font-size: 11px; fill: var(--accent); }
+.diagram .commit { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+.diagram .commit.alt { stroke: var(--accent); }
+.diagram .line { stroke: var(--text); stroke-width: 2; fill: none; }
+.diagram .line.alt { stroke: var(--accent); }
+.diagram .tag { font-family: "JetBrains Mono", monospace; font-size: 11px; }
+.diagram-caption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+.hidden { display: none !important; }
+.no-results { display: none; padding: 40px; text-align: center; color: var(--muted); }
+mark { background: var(--accent-soft); color: inherit; padding: 0 2px; border-radius: 2px; }
+
+footer { border-top: 1px solid var(--border); padding-top: 24px; color: var(--muted); font-size: 14px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  nav.side {
+    position: fixed; top: 61px; left: 0; bottom: 0; width: 280px; z-index: 15;
+    background: var(--bg); transform: translateX(-100%); transition: transform .2s;
+    height: auto;
+  }
+  nav.side.open { transform: none; box-shadow: 4px 0 24px rgba(0,0,0,.15); }
+  .menu-btn { display: grid; }
+  main { padding: 28px 16px 80px; }
+  .grid { grid-template-columns: 1fr; }
+  .topbar { padding: 12px 16px; gap: 10px; }
+  .brand span { display: none; }
+  .search kbd { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <a class="brand" href="#top">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#e5532d"/><circle cx="11" cy="9" r="3" fill="#fff"/><circle cx="11" cy="23" r="3" fill="#fff"/><circle cx="22" cy="14" r="3" fill="#fff"/><path d="M11 12v8M22 17c0 4-5 4-8.5 5" stroke="#fff" stroke-width="2" fill="none"/></svg>
+    <span>Git Reference</span>
+  </a>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Search commands… (e.g. rebase, undo, stash)" autocomplete="off">
+    <kbd>/</kbd>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+</header>
+
+<div class="layout" id="top">
+<nav class="side" id="nav">
+  <h4>Foundations</h4>
+  <a href="#mental-model">Mental model</a>
+  <a href="#setup">Setup &amp; config</a>
+  <a href="#starting">Starting a repo</a>
+  <h4>Everyday</h4>
+  <a href="#snapshots">Staging &amp; committing</a>
+  <a href="#inspecting">Inspecting history</a>
+  <a href="#branching">Branching</a>
+  <a href="#merging">Merging &amp; rebasing</a>
+  <a href="#remotes">Remotes &amp; collaboration</a>
+  <h4>Recovery</h4>
+  <a href="#undoing">Undoing things</a>
+  <a href="#stash">Stashing</a>
+  <a href="#reflog">Reflog: the safety net</a>
+  <h4>Power tools</h4>
+  <a href="#rewriting">Rewriting history</a>
+  <a href="#cherry">Cherry-pick &amp; patches</a>
+  <a href="#bisect">Bisect</a>
+  <a href="#worktree">Worktrees</a>
+  <a href="#tags">Tags &amp; releases</a>
+  <a href="#submodules">Submodules &amp; sparse</a>
+  <a href="#hooks">Hooks</a>
+  <h4>Reference</h4>
+  <a href="#ignore">.gitignore</a>
+  <a href="#refs">Revision syntax</a>
+  <a href="#workflows">Workflows</a>
+  <a href="#cheatsheet">Cheat sheet</a>
+</nav>
+
+<main>
+  <div class="hero">
+    <h1>Everything <span>Git</span> can do,<br>in one page.</h1>
+    <p>A practical reference for version control — from the first commit to bisecting a regression, recovering “lost” work, and rewriting history safely.</p>
+    <div class="chips">
+      <span class="chip">Press <code>/</code> to search</span>
+      <span class="chip">Hover code to copy</span>
+      <span class="chip">Git 2.40+</span>
+    </div>
+  </div>
+
+  <div class="no-results" id="noResults">No commands match your search.</div>
+
+  <!-- 01 Mental model -->
+  <section id="mental-model" data-search="mental model concepts working directory staging index repository snapshot commit hash dag">
+    <h2><span class="num">01</span>Mental model</h2>
+    <p class="lead">Git stores <em>snapshots</em>, not diffs. Every commit is a full picture of your project, identified by a hash, pointing back to its parent(s). Branches are just movable labels on commits.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 760 170" width="760">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>
+        <rect class="box" x="10" y="40" width="160" height="80" rx="10"/>
+        <text class="lbl" x="90" y="76" text-anchor="middle">Working directory</text>
+        <text class="sub" x="90" y="96" text-anchor="middle">files you edit</text>
+        <rect class="box" x="300" y="40" width="160" height="80" rx="10"/>
+        <text class="lbl" x="380" y="76" text-anchor="middle">Staging area</text>
+        <text class="sub" x="380" y="96" text-anchor="middle">“index” — next commit</text>
+        <rect class="box" x="590" y="40" width="160" height="80" rx="10"/>
+        <text class="lbl" x="670" y="76" text-anchor="middle">Repository</text>
+        <text class="sub" x="670" y="96" text-anchor="middle">.git — commit history</text>
+        <path class="arrow" d="M172 62H296" marker-end="url(#ah)"/>
+        <text class="arrow-t" x="234" y="54" text-anchor="middle">git add</text>
+        <path class="arrow" d="M462 62H586" marker-end="url(#ah)"/>
+        <text class="arrow-t" x="524" y="54" text-anchor="middle">git commit</text>
+        <path class="arrow" d="M586 100H462" marker-end="url(#ah)"/>
+        <text class="arrow-t" x="524" y="118" text-anchor="middle">git restore --staged</text>
+        <path class="arrow" d="M296 100H172" marker-end="url(#ah)"/>
+        <text class="arrow-t" x="234" y="118" text-anchor="middle">git restore</text>
+        <path class="arrow" d="M670 122 V150 H90 V124" marker-end="url(#ah)"/>
+        <text class="arrow-t" x="380" y="164" text-anchor="middle">git switch / git checkout</text>
+      </svg>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Commit</h3><p>An immutable snapshot plus metadata (author, message, parent hashes). Identified by a SHA like <code>a1b2c3d</code>.</p></div>
+      <div class="card"><h3>Branch</h3><p>A lightweight pointer to a commit. Committing moves the current branch forward automatically.</p></div>
+      <div class="card"><h3>HEAD</h3><p>“Where you are now.” Usually points to a branch; if it points straight at a commit, you’re in <em>detached HEAD</em>.</p></div>
+      <div class="card"><h3>Remote</h3><p>Another copy of the repo (e.g. on GitHub). <code>origin/main</code> is your local memory of where <code>main</code> is on <code>origin</code>.</p></div>
+    </div>
+  </section>
+
+  <!-- 02 Setup -->
+  <section id="setup" data-search="setup config configure name email editor alias default branch credential ssh key">
+    <h2><span class="num">02</span>Setup &amp; config</h2>
+    <p class="lead">Config lives at three levels: <code>--system</code>, <code>--global</code> (your user), and <code>--local</code> (this repo). More specific wins.</p>
+    <div class="grid">
+      <div class="card"><h3>Identity</h3><p>Stamped on every commit you make.</p>
+<div class="code"><pre>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</pre></div></div>
+      <div class="card"><h3>Sensible defaults</h3><p>Modern settings worth turning on.</p>
+<div class="code"><pre>git config --global init.defaultBranch main
+git config --global pull.rebase true
+git config --global push.autoSetupRemote true
+git config --global rerere.enabled true
+git config --global core.editor "code --wait"</pre></div></div>
+      <div class="card"><h3>Aliases</h3><p>Shortcuts for commands you type constantly.</p>
+<div class="code"><pre>git config --global alias.st "status -sb"
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.undo "reset --soft HEAD~1"</pre></div></div>
+      <div class="card"><h3>Inspect config</h3><p>See every value and which file set it.</p>
+<div class="code"><pre>git config --list --show-origin
+git config --global --edit</pre></div></div>
+      <div class="card"><h3>SSH key for GitHub</h3><p>Authenticate without passwords.</p>
+<div class="code"><pre>ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub   <span class="c"># paste into GitHub → Settings → SSH keys</span>
+ssh -T git@github.com</pre></div></div>
+      <div class="card"><h3>Sign commits</h3><p>Show a “Verified” badge using your SSH key.</p>
+<div class="code"><pre>git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 03 Starting -->
+  <section id="starting" data-search="init clone new repository start shallow depth">
+    <h2><span class="num">03</span>Starting a repo</h2>
+    <div class="grid">
+      <div class="card"><h3>Create a new repo</h3><p>Turn the current directory into a Git repository.</p>
+<div class="code"><pre>git init
+git init my-project       <span class="c"># create a new folder</span></pre></div></div>
+      <div class="card"><h3>Clone an existing repo</h3><p>Download a full copy including history.</p>
+<div class="code"><pre>git clone https://github.com/user/repo.git
+git clone git@github.com:user/repo.git my-dir
+git clone --depth 1 &lt;url&gt;      <span class="c"># shallow: latest commit only</span>
+git clone --filter=blob:none &lt;url&gt;  <span class="c"># partial: fetch file contents lazily</span></pre></div></div>
+    </div>
+  </section>
+
+  <!-- 04 Snapshots -->
+  <section id="snapshots" data-search="add commit status staging stage diff patch amend rm mv restore message">
+    <h2><span class="num">04</span>Staging &amp; committing</h2>
+    <p class="lead">The staging area lets you craft exactly what goes into each commit — even individual lines of a file.</p>
+    <div class="grid">
+      <div class="card"><h3>See what changed</h3><p>Status overview and line-level diffs.</p>
+<div class="code"><pre>git status -sb
+git diff              <span class="c"># unstaged changes</span>
+git diff --staged     <span class="c"># what will be committed</span>
+git diff --word-diff  <span class="c"># inline word changes</span></pre></div></div>
+      <div class="card"><h3>Stage changes</h3><p>Choose what goes in the next commit.</p>
+<div class="code"><pre>git add file.txt
+git add .              <span class="c"># everything in this dir</span>
+git add -p             <span class="c"># pick hunks interactively</span>
+git add -u             <span class="c"># tracked files only</span></pre></div></div>
+      <div class="card"><h3>Commit</h3><p>Record the staged snapshot.</p>
+<div class="code"><pre>git commit -m "Add login form"
+git commit -am "Fix typo"   <span class="c"># stage tracked + commit</span>
+git commit --amend          <span class="c"># edit the last commit</span>
+git commit --amend --no-edit</pre></div></div>
+      <div class="card"><h3>Move &amp; delete files</h3><p>Let Git track renames and removals.</p>
+<div class="code"><pre>git mv old.js new.js
+git rm file.txt
+git rm --cached secrets.env  <span class="c"># untrack, keep on disk</span></pre></div></div>
+    </div>
+    <div class="note"><strong>Good commit messages</strong>Short imperative summary (≤50 chars), blank line, then the <em>why</em>. “Fix race in session refresh” beats “fixed stuff”.</div>
+  </section>
+
+  <!-- 05 Inspecting -->
+  <section id="inspecting" data-search="log show blame grep shortlog history search pickaxe who changed graph">
+    <h2><span class="num">05</span>Inspecting history</h2>
+    <div class="grid">
+      <div class="card"><h3>Browse the log</h3><p>Many ways to slice history.</p>
+<div class="code"><pre>git log --oneline --graph --all
+git log -p path/to/file      <span class="c"># patches for one file</span>
+git log --since="2 weeks ago" --author="Ana"
+git log main..feature        <span class="c"># on feature, not main</span>
+git log --follow file.js     <span class="c"># across renames</span></pre></div></div>
+      <div class="card"><h3>Search history (pickaxe)</h3><p>Find when a string was added or removed.</p>
+<div class="code"><pre>git log -S "apiKey"           <span class="c"># count of string changed</span>
+git log -G "fetch\(.*\)"      <span class="c"># regex in diff</span>
+git log --grep="hotfix"       <span class="c"># commit messages</span></pre></div></div>
+      <div class="card"><h3>Look at a commit</h3><p>Inspect any object.</p>
+<div class="code"><pre>git show a1b2c3d
+git show HEAD~2:src/app.js    <span class="c"># file at that commit</span>
+git show --stat HEAD</pre></div></div>
+      <div class="card"><h3>Who changed this line?</h3><p>Line-by-line authorship.</p>
+<div class="code"><pre>git blame app.js
+git blame -L 40,60 app.js
+git blame -w -C app.js   <span class="c"># ignore whitespace, detect moves</span></pre></div></div>
+      <div class="card"><h3>Search the code</h3><p>Fast grep over tracked files.</p>
+<div class="code"><pre>git grep "TODO"
+git grep -n "useState" -- '*.tsx'
+git grep "old_api" v1.0     <span class="c"># at a tag</span></pre></div></div>
+      <div class="card"><h3>Stats</h3><p>Who contributes and how much.</p>
+<div class="code"><pre>git shortlog -sn
+git diff --stat main...feature
+git count-objects -vH</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 06 Branching -->
+  <section id="branching" data-search="branch switch checkout create delete rename list detached head">
+    <h2><span class="num">06</span>Branching</h2>
+    <p class="lead">Branches are cheap — a 41-byte file. Make one for every feature, fix or experiment.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 640 150" width="640">
+        <path class="line" d="M40 100H520"/>
+        <path class="line alt" d="M220 100 C 260 100, 260 40, 300 40 H460"/>
+        <circle class="commit" cx="40" cy="100" r="11"/><circle class="commit" cx="130" cy="100" r="11"/>
+        <circle class="commit" cx="220" cy="100" r="11"/><circle class="commit" cx="370" cy="100" r="11"/>
+        <circle class="commit" cx="520" cy="100" r="11"/>
+        <circle class="commit alt" cx="300" cy="40" r="11"/><circle class="commit alt" cx="380" cy="40" r="11"/><circle class="commit alt" cx="460" cy="40" r="11"/>
+        <rect x="490" y="118" width="60" height="22" rx="5" fill="var(--text)"/><text class="tag" x="520" y="133" text-anchor="middle" fill="var(--bg)" style="fill:var(--bg)">main</text>
+        <rect x="420" y="6" width="80" height="22" rx="5" fill="var(--accent)"/><text class="tag" x="460" y="21" text-anchor="middle" style="fill:#fff">feature</text>
+        <text class="sub" x="560" y="44">← HEAD</text>
+      </svg>
+      <div class="diagram-caption">A feature branch diverging from <code>main</code>.</div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Create &amp; switch</h3><p><code>switch</code> is the modern, focused alternative to <code>checkout</code>.</p>
+<div class="code"><pre>git switch -c feature/login     <span class="c"># create + switch</span>
+git switch main
+git switch -                    <span class="c"># previous branch</span>
+git switch -c fix origin/fix    <span class="c"># track a remote branch</span></pre></div></div>
+      <div class="card"><h3>List branches</h3><p>Local, remote, merged or stale.</p>
+<div class="code"><pre>git branch -vv            <span class="c"># with upstream + last commit</span>
+git branch -a             <span class="c"># include remotes</span>
+git branch --merged main
+git branch --sort=-committerdate</pre></div></div>
+      <div class="card"><h3>Rename &amp; delete</h3><p>Clean up when you’re done.</p>
+<div class="code"><pre>git branch -m old-name new-name
+git branch -d feature      <span class="c"># safe: only if merged</span>
+git branch -D feature      <span class="c"># force</span>
+git push origin --delete feature</pre></div></div>
+      <div class="card"><h3>Detached HEAD</h3><p>Look around an old commit without a branch.</p>
+<div class="code"><pre>git switch --detach v1.2.0
+<span class="c"># made commits? keep them:</span>
+git switch -c rescue-branch</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 07 Merging -->
+  <section id="merging" data-search="merge rebase conflict fast-forward squash no-ff resolve mergetool rerere ours theirs">
+    <h2><span class="num">07</span>Merging &amp; rebasing</h2>
+    <p class="lead">Two ways to integrate work. <strong>Merge</strong> preserves history exactly as it happened. <strong>Rebase</strong> replays your commits on top of another branch for a linear history.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 720 200" width="720">
+        <text class="lbl" x="170" y="18" text-anchor="middle">git merge feature</text>
+        <path class="line" d="M20 140H320"/>
+        <path class="line alt" d="M90 140 C 120 140, 120 80, 150 80 H230 C 260 80, 260 140, 290 140"/>
+        <circle class="commit" cx="20" cy="140" r="9"/><circle class="commit" cx="90" cy="140" r="9"/><circle class="commit" cx="190" cy="140" r="9"/>
+        <circle class="commit alt" cx="150" cy="80" r="9"/><circle class="commit alt" cx="230" cy="80" r="9"/>
+        <circle class="commit" cx="290" cy="140" r="11" style="stroke-width:3"/>
+        <text class="sub" x="290" y="172" text-anchor="middle">merge commit</text>
+
+        <text class="lbl" x="540" y="18" text-anchor="middle">git rebase main</text>
+        <path class="line" d="M390 140H560"/>
+        <path class="line alt" d="M560 140 C 580 140, 580 80, 600 80 H690"/>
+        <circle class="commit" cx="390" cy="140" r="9"/><circle class="commit" cx="460" cy="140" r="9"/><circle class="commit" cx="560" cy="140" r="9"/>
+        <circle class="commit alt" cx="620" cy="80" r="9"/><circle class="commit alt" cx="690" cy="80" r="9"/>
+        <text class="sub" x="655" y="60" text-anchor="middle">replayed (new hashes)</text>
+      </svg>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Merge</h3><p>Combine another branch into the current one.</p>
+<div class="code"><pre>git switch main
+git merge feature
+git merge --no-ff feature    <span class="c"># always create merge commit</span>
+git merge --squash feature   <span class="c"># one combined change</span>
+git merge --abort</pre></div></div>
+      <div class="card"><h3>Rebase</h3><p>Move your branch to start from a newer base.</p>
+<div class="code"><pre>git switch feature
+git rebase main
+git rebase --continue   <span class="c"># after fixing conflicts</span>
+git rebase --abort
+git rebase --onto main old-base feature</pre></div></div>
+      <div class="card"><h3>Resolve conflicts</h3><p>Edit the <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers, then stage.</p>
+<div class="code"><pre>git status                     <span class="c"># see conflicted files</span>
+git checkout --ours file.txt   <span class="c"># keep our version</span>
+git checkout --theirs file.txt <span class="c"># keep their version</span>
+git add file.txt
+git mergetool</pre></div></div>
+      <div class="card"><h3>Better conflict markers</h3><p>Show the common ancestor too — far easier to reason about.</p>
+<div class="code"><pre>git config --global merge.conflictstyle zdiff3
+git config --global rerere.enabled true  <span class="c"># remember resolutions</span></pre></div></div>
+    </div>
+    <div class="warn"><strong>The golden rule of rebasing</strong>Never rebase commits that others have already pulled. Rebasing rewrites hashes; shared history should only move forward.</div>
+  </section>
+
+  <!-- 08 Remotes -->
+  <section id="remotes" data-search="remote push pull fetch origin upstream fork force-with-lease track pr pull request github">
+    <h2><span class="num">08</span>Remotes &amp; collaboration</h2>
+    <div class="grid">
+      <div class="card"><h3>Manage remotes</h3><p>Named URLs for other copies of the repo.</p>
+<div class="code"><pre>git remote -v
+git remote add origin git@github.com:me/repo.git
+git remote add upstream git@github.com:org/repo.git
+git remote set-url origin &lt;new-url&gt;
+git remote prune origin</pre></div></div>
+      <div class="card"><h3>Fetch vs pull</h3><p><code>fetch</code> downloads; <code>pull</code> = fetch + merge (or rebase).</p>
+<div class="code"><pre>git fetch --all --prune
+git pull                 <span class="c"># fetch + integrate</span>
+git pull --rebase
+git pull --ff-only       <span class="c"># refuse if not fast-forward</span></pre></div></div>
+      <div class="card"><h3>Push</h3><p>Publish your commits.</p>
+<div class="code"><pre>git push -u origin feature    <span class="c"># set upstream</span>
+git push
+git push --force-with-lease   <span class="c"># safe force push</span>
+git push --tags</pre></div></div>
+      <div class="card"><h3>Keep a fork in sync</h3><p>Pull upstream changes into your fork.</p>
+<div class="code"><pre>git fetch upstream
+git switch main
+git rebase upstream/main
+git push --force-with-lease</pre></div></div>
+    </div>
+    <div class="note"><strong>Prefer <code>--force-with-lease</code> over <code>--force</code></strong>It refuses to overwrite the remote if someone else pushed since your last fetch.</div>
+  </section>
+
+  <!-- 09 Undoing -->
+  <section id="undoing" data-search="undo reset revert restore discard unstage amend mistake soft mixed hard clean">
+    <h2><span class="num">09</span>Undoing things</h2>
+    <p class="lead">Pick the tool by <em>what</em> you want to undo and <em>whether it’s been pushed</em>.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>I want to…</th><th>Command</th><th>Safe after push?</th></tr></thead>
+      <tbody>
+        <tr><td>Discard edits to a file</td><td><code>git restore file.txt</code></td><td>—</td></tr>
+        <tr><td>Unstage a file</td><td><code>git restore --staged file.txt</code></td><td>—</td></tr>
+        <tr><td>Fix the last commit message / add a forgotten file</td><td><code>git commit --amend</code></td><td>No</td></tr>
+        <tr><td>Undo last commit, keep changes staged</td><td><code>git reset --soft HEAD~1</code></td><td>No</td></tr>
+        <tr><td>Undo last commit, keep changes unstaged</td><td><code>git reset HEAD~1</code></td><td>No</td></tr>
+        <tr><td>Throw away last commit and its changes</td><td><code>git reset --hard HEAD~1</code></td><td>No</td></tr>
+        <tr><td>Undo a pushed commit</td><td><code>git revert &lt;sha&gt;</code></td><td>Yes ✓</td></tr>
+        <tr><td>Revert a merge commit</td><td><code>git revert -m 1 &lt;merge-sha&gt;</code></td><td>Yes ✓</td></tr>
+        <tr><td>Delete untracked files</td><td><code>git clean -fd</code> (preview: <code>-n</code>)</td><td>—</td></tr>
+        <tr><td>Reset branch to match remote</td><td><code>git reset --hard origin/main</code></td><td>—</td></tr>
+        <tr><td>Restore a file from another commit</td><td><code>git restore --source=HEAD~3 file.txt</code></td><td>—</td></tr>
+      </tbody>
+    </table></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th><code>git reset</code> mode</th><th>Moves branch</th><th>Staging area</th><th>Working dir</th></tr></thead>
+      <tbody>
+        <tr><td><code>--soft</code></td><td>✓</td><td>kept</td><td>kept</td></tr>
+        <tr><td><code>--mixed</code> (default)</td><td>✓</td><td>reset</td><td>kept</td></tr>
+        <tr><td><code>--hard</code></td><td>✓</td><td>reset</td><td>reset ⚠</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 10 Stash -->
+  <section id="stash" data-search="stash save pop apply drop list shelve temporary wip">
+    <h2><span class="num">10</span>Stashing</h2>
+    <p class="lead">Shelve uncommitted work so you can switch context, then bring it back.</p>
+    <div class="grid">
+      <div class="card"><h3>Save &amp; restore</h3><p>A stack of temporary snapshots.</p>
+<div class="code"><pre>git stash push -m "wip: navbar"
+git stash -u               <span class="c"># include untracked files</span>
+git stash list
+git stash pop              <span class="c"># apply + drop</span>
+git stash apply stash@{1}  <span class="c"># apply, keep in list</span></pre></div></div>
+      <div class="card"><h3>Advanced stash</h3><p>Partial stashes and branching from one.</p>
+<div class="code"><pre>git stash push -p              <span class="c"># choose hunks</span>
+git stash push -- src/api.js   <span class="c"># specific paths</span>
+git stash show -p stash@{0}
+git stash branch new-branch    <span class="c"># branch from stash</span>
+git stash drop / git stash clear</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 11 Reflog -->
+  <section id="reflog" data-search="reflog recover lost commit deleted branch safety net undo reset hard">
+    <h2><span class="num">11</span>Reflog: the safety net</h2>
+    <p class="lead">Git records every move of HEAD for ~90 days. If you committed it, you can almost always get it back — even after a bad <code>reset --hard</code> or a deleted branch.</p>
+    <div class="grid">
+      <div class="card"><h3>Find where you were</h3><p>Every checkout, commit, reset, rebase.</p>
+<div class="code"><pre>git reflog
+git reflog show feature
+git log -g --oneline</pre></div></div>
+      <div class="card"><h3>Recover</h3><p>Point a branch back at the lost commit.</p>
+<div class="code"><pre>git reset --hard HEAD@{2}           <span class="c"># go back 2 moves</span>
+git branch recovered a1b2c3d        <span class="c"># resurrect a branch</span>
+git switch main@{yesterday} --detach</pre></div></div>
+      <div class="card"><h3>Undo a bad rebase</h3><p><code>ORIG_HEAD</code> remembers where you started.</p>
+<div class="code"><pre>git reset --hard ORIG_HEAD</pre></div></div>
+      <div class="card"><h3>Find dangling objects</h3><p>Last resort for things never on a branch.</p>
+<div class="code"><pre>git fsck --lost-found
+git fsck --unreachable | grep commit</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 12 Rewriting -->
+  <section id="rewriting" data-search="rewrite interactive rebase squash fixup reword reorder edit autosquash filter-repo remove secret split commit">
+    <h2><span class="num">12</span>Rewriting history</h2>
+    <p class="lead">Interactive rebase turns a messy series of commits into a clean story before you share it.</p>
+<div class="code"><pre><span class="p">$ </span>git rebase -i HEAD~4
+
+pick   a1b2c3d Add user model
+<span class="c"># reword = change message · squash = meld into previous · fixup = meld, drop message</span>
+fixup  e4f5a6b oops, typo
+reword 7c8d9e0 add API endpoint
+edit   1f2a3b4 Big commit to split
+drop   5c6d7e8 debug logging</pre></div>
+    <h3>Common recipes</h3>
+    <div class="grid">
+      <div class="card"><h3>Autosquash fixups</h3><p>Mark a fix for an earlier commit; Git places it for you.</p>
+<div class="code"><pre>git commit --fixup=a1b2c3d
+git rebase -i --autosquash main</pre></div></div>
+      <div class="card"><h3>Split a commit</h3><p>Mark it <code>edit</code> in the rebase, then:</p>
+<div class="code"><pre>git reset HEAD~1
+git add -p &amp;&amp; git commit -m "Part 1"
+git add -p &amp;&amp; git commit -m "Part 2"
+git rebase --continue</pre></div></div>
+      <div class="card"><h3>Run tests on every commit</h3><p>Rebase stops at the first failure.</p>
+<div class="code"><pre>git rebase -i --exec "npm test" main</pre></div></div>
+      <div class="card"><h3>Purge a file from all history</h3><p>Use <code>git-filter-repo</code> (the recommended replacement for <code>filter-branch</code>).</p>
+<div class="code"><pre>pip install git-filter-repo
+git filter-repo --path secrets.env --invert-paths
+git filter-repo --replace-text expressions.txt</pre></div></div>
+    </div>
+    <div class="warn"><strong>Leaked a secret?</strong>Rewriting history isn’t enough — anyone may have cloned it. Rotate the credential first, then clean the history.</div>
+  </section>
+
+  <!-- 13 Cherry-pick -->
+  <section id="cherry" data-search="cherry-pick patch format-patch apply am backport range-diff">
+    <h2><span class="num">13</span>Cherry-pick &amp; patches</h2>
+    <div class="grid">
+      <div class="card"><h3>Cherry-pick</h3><p>Copy specific commits onto the current branch.</p>
+<div class="code"><pre>git cherry-pick a1b2c3d
+git cherry-pick a1b2c3d..f6e5d4c   <span class="c"># range</span>
+git cherry-pick -x a1b2c3d         <span class="c"># note origin in message</span>
+git cherry-pick --no-commit a1b2c3d</pre></div></div>
+      <div class="card"><h3>Patches by email / file</h3><p>Share commits without a shared remote.</p>
+<div class="code"><pre>git format-patch -3            <span class="c"># last 3 commits → .patch files</span>
+git am *.patch                 <span class="c"># apply as commits</span>
+git diff &gt; change.diff
+git apply change.diff          <span class="c"># apply as unstaged changes</span></pre></div></div>
+      <div class="card"><h3>Compare two versions of a branch</h3><p>See what changed between rebases of a PR.</p>
+<div class="code"><pre>git range-diff main feature@{1} feature</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 14 Bisect -->
+  <section id="bisect" data-search="bisect binary search bug regression find good bad automate">
+    <h2><span class="num">14</span>Bisect</h2>
+    <p class="lead">Binary-search your history to find the exact commit that introduced a bug. 1,000 commits → about 10 steps.</p>
+    <div class="grid">
+      <div class="card"><h3>Manual</h3><p>Git checks out the midpoint; you test and report.</p>
+<div class="code"><pre>git bisect start
+git bisect bad              <span class="c"># current commit is broken</span>
+git bisect good v2.1.0      <span class="c"># this one worked</span>
+<span class="c"># ...test, then:</span>
+git bisect good   <span class="c"># or: git bisect bad</span>
+git bisect reset</pre></div></div>
+      <div class="card"><h3>Automated</h3><p>Let a script decide — exit 0 = good, non-zero = bad.</p>
+<div class="code"><pre>git bisect start HEAD v2.1.0
+git bisect run npm test
+git bisect skip   <span class="c"># if a commit can't be tested</span>
+git bisect log</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 15 Worktree -->
+  <section id="worktree" data-search="worktree multiple working directories parallel branches review hotfix">
+    <h2><span class="num">15</span>Worktrees</h2>
+    <p class="lead">Check out several branches at once in separate folders, sharing one repository. No more stashing to review a PR or ship a hotfix.</p>
+<div class="code"><pre>git worktree add ../hotfix main            <span class="c"># existing branch</span>
+git worktree add -b review ../review origin/pr-42
+git worktree list
+git worktree remove ../hotfix
+git worktree prune</pre></div>
+  </section>
+
+  <!-- 16 Tags -->
+  <section id="tags" data-search="tag release version annotated lightweight semver describe archive">
+    <h2><span class="num">16</span>Tags &amp; releases</h2>
+    <div class="grid">
+      <div class="card"><h3>Create tags</h3><p>Annotated tags store author, date and message — use them for releases.</p>
+<div class="code"><pre>git tag -a v1.0.0 -m "First stable release"
+git tag v1.0.0-rc1                <span class="c"># lightweight</span>
+git tag -a v0.9.0 a1b2c3d         <span class="c"># tag an old commit</span>
+git push origin v1.0.0</pre></div></div>
+      <div class="card"><h3>Use tags</h3><p>List, describe and package.</p>
+<div class="code"><pre>git tag -l "v1.*"
+git describe --tags         <span class="c"># v1.0.0-14-ga1b2c3d</span>
+git tag -d v1.0.0 &amp;&amp; git push origin :refs/tags/v1.0.0
+git archive --format=zip v1.0.0 &gt; release.zip</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 17 Submodules -->
+  <section id="submodules" data-search="submodule sparse checkout monorepo large lfs nested dependency">
+    <h2><span class="num">17</span>Submodules, sparse checkout &amp; LFS</h2>
+    <div class="grid">
+      <div class="card"><h3>Submodules</h3><p>Embed another repo at a pinned commit.</p>
+<div class="code"><pre>git submodule add https://github.com/lib/x libs/x
+git clone --recurse-submodules &lt;url&gt;
+git submodule update --init --recursive
+git submodule update --remote</pre></div></div>
+      <div class="card"><h3>Sparse checkout</h3><p>Only materialize the folders you need in a huge monorepo.</p>
+<div class="code"><pre>git clone --filter=blob:none --sparse &lt;url&gt;
+git sparse-checkout set apps/web packages/ui
+git sparse-checkout add docs
+git sparse-checkout disable</pre></div></div>
+      <div class="card"><h3>Large File Storage</h3><p>Keep big binaries out of the object database.</p>
+<div class="code"><pre>git lfs install
+git lfs track "*.psd"
+git add .gitattributes
+git lfs ls-files</pre></div></div>
+      <div class="card"><h3>Speed up big repos</h3><p>Background maintenance and filesystem monitoring.</p>
+<div class="code"><pre>git maintenance start
+git config core.fsmonitor true
+git gc --aggressive</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 18 Hooks -->
+  <section id="hooks" data-search="hooks pre-commit commit-msg pre-push automation lint husky hookspath">
+    <h2><span class="num">18</span>Hooks</h2>
+    <p class="lead">Scripts in <code>.git/hooks/</code> that run on events. Exit non-zero to block the action.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Hook</th><th>Runs</th><th>Typical use</th></tr></thead>
+      <tbody>
+        <tr><td><code>pre-commit</code></td><td>before a commit is created</td><td>lint, format, block secrets</td></tr>
+        <tr><td><code>commit-msg</code></td><td>after message is written</td><td>enforce Conventional Commits</td></tr>
+        <tr><td><code>pre-push</code></td><td>before pushing</td><td>run test suite</td></tr>
+        <tr><td><code>post-checkout</code></td><td>after switching branches</td><td>install deps, regenerate files</td></tr>
+        <tr><td><code>pre-receive</code></td><td>on the server</td><td>enforce policy on pushes</td></tr>
+      </tbody>
+    </table></div>
+<div class="code"><pre><span class="c"># .githooks/pre-commit — share hooks via the repo</span>
+#!/bin/sh
+npm run lint || exit 1
+
+<span class="p">$ </span>chmod +x .githooks/pre-commit
+<span class="p">$ </span>git config core.hooksPath .githooks</pre></div>
+  </section>
+
+  <!-- 19 Ignore -->
+  <section id="ignore" data-search="gitignore ignore exclude pattern untracked gitattributes check-ignore">
+    <h2><span class="num">19</span>.gitignore</h2>
+    <div class="grid">
+      <div class="card"><h3>Pattern syntax</h3><p>One pattern per line.</p>
+<div class="code"><pre><span class="c"># comments start with #</span>
+node_modules/      <span class="c"># a directory anywhere</span>
+*.log              <span class="c"># by extension</span>
+/build             <span class="c"># only at repo root</span>
+docs/**/*.pdf      <span class="c"># any depth</span>
+!important.log     <span class="c"># re-include</span>
+.env*</pre></div></div>
+      <div class="card"><h3>Debug &amp; scope</h3><p>Why is this file ignored?</p>
+<div class="code"><pre>git check-ignore -v path/to/file
+git status --ignored
+<span class="c"># personal, unshared ignores:</span>
+echo "scratch/" &gt;&gt; .git/info/exclude
+git config --global core.excludesFile ~/.gitignore_global</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 20 Refs -->
+  <section id="refs" data-search="revision syntax head tilde caret range double dot triple dot refs parent ancestor">
+    <h2><span class="num">20</span>Revision syntax</h2>
+    <p class="lead">Ways to name a commit anywhere Git expects one.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Syntax</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>HEAD</code></td><td>The current commit</td></tr>
+        <tr><td><code>HEAD~3</code></td><td>Three commits back along first parents</td></tr>
+        <tr><td><code>HEAD^2</code></td><td>The second parent of a merge commit</td></tr>
+        <tr><td><code>main@{upstream}</code> / <code>@{u}</code></td><td>The branch’s upstream (e.g. <code>origin/main</code>)</td></tr>
+        <tr><td><code>main@{2.days.ago}</code></td><td>Where <code>main</code> pointed two days ago (reflog)</td></tr>
+        <tr><td><code>A..B</code></td><td>Commits in B not in A (“what’s new on B”)</td></tr>
+        <tr><td><code>A...B</code></td><td>Commits in either but not both; in <code>diff</code>, changes since the merge-base</td></tr>
+        <tr><td><code>:/fix login</code></td><td>Most recent commit whose message matches</td></tr>
+        <tr><td><code>v1.0:src/app.js</code></td><td>A file’s contents at a revision</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 21 Workflows -->
+  <section id="workflows" data-search="workflow github flow trunk based gitflow conventional commits pull request feature branch">
+    <h2><span class="num">21</span>Workflows</h2>
+    <div class="grid">
+      <div class="card"><h3>GitHub Flow</h3><p>Branch off <code>main</code>, open a pull request, review, merge, deploy. Simple and great for continuous delivery.</p>
+<div class="code"><pre>git switch -c feature/search
+<span class="c"># ...commit work</span>
+git push -u origin feature/search
+gh pr create --fill</pre></div></div>
+      <div class="card"><h3>Trunk-based</h3><p>Everyone integrates into <code>main</code> at least daily via small, short-lived branches. Unfinished work hides behind feature flags.</p></div>
+      <div class="card"><h3>Git Flow</h3><p>Long-lived <code>main</code> + <code>develop</code>, with <code>feature/</code>, <code>release/</code> and <code>hotfix/</code> branches. Suits versioned, scheduled releases.</p></div>
+      <div class="card"><h3>Conventional Commits</h3><p>Machine-readable messages that drive changelogs and semver.</p>
+<div class="code"><pre>feat(auth): add OAuth login
+fix(api): handle empty response
+docs: update README
+feat!: drop Node 16 support</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 22 Cheatsheet -->
+  <section id="cheatsheet" data-search="cheat sheet quick reference summary daily commands">
+    <h2><span class="num">22</span>Daily cheat sheet</h2>
+<div class="code"><pre>git switch main &amp;&amp; git pull           <span class="c"># start fresh</span>
+git switch -c feature/thing            <span class="c"># new branch</span>
+git add -p                             <span class="c"># stage carefully</span>
+git commit -m "Describe the change"
+git fetch &amp;&amp; git rebase origin/main    <span class="c"># stay current</span>
+git push -u origin feature/thing       <span class="c"># share</span>
+git lg                                 <span class="c"># look around (alias)</span>
+git reflog                             <span class="c"># when in doubt</span></pre></div>
+  </section>
+
+  <footer>
+    Built as a learning reference. Official docs: <a href="https://git-scm.com/docs">git-scm.com/docs</a> · Free book: <a href="https://git-scm.com/book">Pro Git</a> · Run <code>git help &lt;command&gt;</code> for any command.
+  </footer>
+</main>
+</div>
+
+<script>
+(function () {
+  // Copy buttons
+  document.querySelectorAll('.code').forEach(function (block) {
+    var btn = document.createElement('button');
+    btn.className = 'copy';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function () {
+      var pre = block.querySelector('pre').cloneNode(true);
+      pre.querySelectorAll('.c, .p').forEach(function (n) { n.remove(); });
+      var text = pre.textContent.split('\n').map(function (l) { return l.replace(/\s+$/, ''); })
+        .filter(function (l) { return l.length; }).join('\n');
+      navigator.clipboard.writeText(text).then(function () {
+        btn.textContent = 'Copied'; btn.classList.add('done');
+        setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1400);
+      });
+    });
+    block.appendChild(btn);
+  });
+
+  // Theme toggle
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem('theme'); if (saved) root.dataset.theme = saved; } catch (e) {}
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var dark = root.dataset.theme ? root.dataset.theme === 'dark'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+  });
+
+  // Mobile nav
+  var nav = document.getElementById('nav');
+  document.getElementById('menuBtn').addEventListener('click', function () { nav.classList.toggle('open'); });
+  nav.addEventListener('click', function (e) { if (e.target.tagName === 'A') nav.classList.remove('open'); });
+
+  // Active section highlight
+  var links = {};
+  nav.querySelectorAll('a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting && links[en.target.id]) {
+        Object.values(links).forEach(function (a) { a.classList.remove('active'); });
+        links[en.target.id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  document.querySelectorAll('main section').forEach(function (s) { obs.observe(s); });
+
+  // Search: filter sections and cards
+  var input = document.getElementById('search');
+  var sections = Array.from(document.querySelectorAll('main section'));
+  var hero = document.querySelector('.hero');
+  input.addEventListener('input', function () {
+    var q = input.value.trim().toLowerCase();
+    var any = false;
+    sections.forEach(function (sec) {
+      var cards = sec.querySelectorAll('.card');
+      if (!q) {
+        sec.classList.remove('hidden');
+        cards.forEach(function (c) { c.classList.remove('hidden'); });
+        return;
+      }
+      var secMatch = (sec.dataset.search + ' ' + sec.querySelector('h2').textContent).toLowerCase().includes(q);
+      var cardHit = false;
+      cards.forEach(function (c) {
+        var hit = c.textContent.toLowerCase().includes(q);
+        c.classList.toggle('hidden', !hit && !secMatch);
+        if (hit) cardHit = true;
+      });
+      var show = secMatch || cardHit || sec.textContent.toLowerCase().includes(q);
+      sec.classList.toggle('hidden', !show);
+      if (show) any = true;
+    });
+    hero.classList.toggle('hidden', !!q);
+    document.getElementById('noResults').style.display = (q && !any) ? 'block' : 'none';
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+    if (e.key === 'Escape' && document.activeElement === input) { input.value = ''; input.dispatchEvent(new Event('input')); input.blur(); }
+  });
+})();
+</script>
+</body>
+</html>
