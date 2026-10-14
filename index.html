@@ -24,6 +24,8 @@
   --ok: #2f7d4f;
   --warn: #b25b00;
   --warn-soft: #fff3e3;
+  --err: #b4232c;
+  --err-soft: #fdecec;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
 }
 @media (prefers-color-scheme: dark) {
@@ -42,6 +44,8 @@
     --ok: #6cc28f;
     --warn: #f0a050;
     --warn-soft: #2e2214;
+    --err: #ff8a8a;
+    --err-soft: #2f1a1a;
     --shadow: none;
   }
 }
@@ -60,6 +64,8 @@
   --ok: #6cc28f;
   --warn: #f0a050;
   --warn-soft: #2e2214;
+  --err: #ff8a8a;
+  --err-soft: #2f1a1a;
   --shadow: none;
 }
 * { box-sizing: border-box; }
@@ -213,6 +219,17 @@ td code { white-space: nowrap; }
 .diagram-caption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
 
 .hidden { display: none !important; }
+/* Troubleshooting */
+.group-h { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 32px 0 12px; }
+.group-h:first-of-type { margin-top: 8px; }
+.err {
+  font: 12.5px/1.5 "JetBrains Mono", monospace;
+  color: var(--err); background: var(--err-soft);
+  padding: 7px 10px; border-radius: 6px; margin: 6px 0 10px;
+  overflow-wrap: anywhere;
+}
+.card .why { font-size: 13.5px; }
+.card .why b { color: var(--text); font-weight: 600; }
 .no-results { display: none; padding: 40px; text-align: center; color: var(--muted); }
 mark { background: var(--accent-soft); color: inherit; padding: 0 2px; border-radius: 2px; }
 
@@ -280,6 +297,9 @@ footer { border-top: 1px solid var(--border); padding-top: 24px; color: var(--mu
   <a href="#tags">Tags &amp; releases</a>
   <a href="#submodules">Submodules &amp; sparse</a>
   <a href="#hooks">Hooks</a>
+  <h4>Troubleshooting</h4>
+  <a href="#troubleshooting">Common problems</a>
+  <a href="#debugging">Debugging Git itself</a>
   <h4>Reference</h4>
   <a href="#ignore">.gitignore</a>
   <a href="#refs">Revision syntax</a>
@@ -782,9 +802,220 @@ npm run lint || exit 1
 <span class="p">$ </span>git config core.hooksPath .githooks</pre></div>
   </section>
 
-  <!-- 19 Ignore -->
+  <!-- 19 Troubleshooting -->
+  <section id="troubleshooting" data-search="troubleshooting problems common issues solutions">
+    <h2><span class="num">19</span>Common problems</h2>
+    <p class="lead">The error messages you’ll actually hit, what causes them, and how to fix them. Search for words from your error to jump straight to it.</p>
+
+    <h3 class="group-h">Pushing &amp; pulling</h3>
+    <div class="grid">
+      <div class="card"><h3>Push rejected: remote has new work</h3>
+        <div class="err">! [rejected] main -&gt; main (fetch first)<br>Updates were rejected because the remote contains work that you do not have locally.</div>
+        <p class="why"><b>Why:</b> someone pushed since your last pull. Integrate their commits first, then push again.</p>
+<div class="code"><pre>git pull --rebase
+git push</pre></div></div>
+      <div class="card"><h3>No upstream branch</h3>
+        <div class="err">fatal: The current branch feature has no upstream branch.</div>
+        <p class="why"><b>Why:</b> a new local branch doesn’t know which remote branch to push to yet.</p>
+<div class="code"><pre>git push -u origin HEAD
+<span class="c"># never see it again:</span>
+git config --global push.autoSetupRemote true</pre></div></div>
+      <div class="card"><h3>Divergent branches on pull</h3>
+        <div class="err">hint: You have divergent branches and need to specify how to reconcile them.</div>
+        <p class="why"><b>Why:</b> both you and the remote have new commits, and Git wants you to choose merge or rebase.</p>
+<div class="code"><pre>git pull --rebase        <span class="c"># linear history</span>
+git pull --no-rebase     <span class="c"># merge commit</span>
+git config --global pull.rebase true   <span class="c"># set a default</span></pre></div></div>
+      <div class="card"><h3>Refusing to merge unrelated histories</h3>
+        <div class="err">fatal: refusing to merge unrelated histories</div>
+        <p class="why"><b>Why:</b> you ran <code>git init</code> locally and the GitHub repo was created with its own README/license commit. The two have no common ancestor.</p>
+<div class="code"><pre>git pull origin main --allow-unrelated-histories</pre></div></div>
+      <div class="card"><h3>src refspec does not match any</h3>
+        <div class="err">error: src refspec main does not match any</div>
+        <p class="why"><b>Why:</b> there are no commits yet, or your branch is called <code>master</code>, not <code>main</code>.</p>
+<div class="code"><pre>git branch --show-current   <span class="c"># what is it called?</span>
+git commit -m "Initial commit"  <span class="c"># if nothing committed</span>
+git branch -M main
+git push -u origin main</pre></div></div>
+      <div class="card"><h3>File too large for GitHub</h3>
+        <div class="err">remote: error: File big.zip is 142 MB; this exceeds GitHub's file size limit of 100.00 MB</div>
+        <p class="why"><b>Why:</b> the file is in a commit, so deleting it in a <em>new</em> commit isn’t enough. Remove it from history.</p>
+<div class="code"><pre><span class="c"># in the latest commit:</span>
+git rm --cached big.zip &amp;&amp; git commit --amend --no-edit
+<span class="c"># in older commits:</span>
+git filter-repo --path big.zip --invert-paths
+<span class="c"># or move it to LFS:</span>
+git lfs migrate import --include="*.zip"</pre></div></div>
+    </div>
+
+    <h3 class="group-h">Authentication</h3>
+    <div class="grid">
+      <div class="card"><h3>Password authentication removed</h3>
+        <div class="err">remote: Support for password authentication was removed.<br>fatal: Authentication failed for 'https://github.com/…'</div>
+        <p class="why"><b>Why:</b> GitHub no longer accepts account passwords over HTTPS. Use the GitHub CLI, a personal access token, or SSH.</p>
+<div class="code"><pre>gh auth login
+gh auth setup-git      <span class="c"># use gh as credential helper</span></pre></div></div>
+      <div class="card"><h3>Permission denied (publickey)</h3>
+        <div class="err">git@github.com: Permission denied (publickey).<br>fatal: Could not read from remote repository.</div>
+        <p class="why"><b>Why:</b> no SSH key is loaded, or the key isn’t added to your GitHub account.</p>
+<div class="code"><pre>ssh -T git@github.com            <span class="c"># test the connection</span>
+ssh-add -l                       <span class="c"># loaded keys</span>
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+git remote -v                    <span class="c"># ssh or https URL?</span></pre></div></div>
+      <div class="card"><h3>Repository not found</h3>
+        <div class="err">remote: Repository not found.<br>fatal: repository 'https://github.com/…' not found</div>
+        <p class="why"><b>Why:</b> a typo in the URL, or the repo is private and you’re signed in as an account without access.</p>
+<div class="code"><pre>git remote -v
+gh auth status
+git remote set-url origin git@github.com:owner/repo.git</pre></div></div>
+    </div>
+
+    <h3 class="group-h">Branches &amp; commits</h3>
+    <div class="grid">
+      <div class="card"><h3>Committed to the wrong branch</h3>
+        <p class="why">You made commits on <code>main</code> that belong on a new feature branch, and haven’t pushed them.</p>
+<div class="code"><pre>git branch feature            <span class="c"># save commits on a new branch</span>
+git reset --hard origin/main  <span class="c"># put main back</span>
+git switch feature</pre></div>
+        <p class="why">Commit belongs on an <em>existing</em> branch instead?</p>
+<div class="code"><pre>git switch right-branch
+git cherry-pick &lt;sha&gt;
+git switch -  &amp;&amp; git reset --hard HEAD~1</pre></div></div>
+      <div class="card"><h3>Local changes would be overwritten</h3>
+        <div class="err">error: Your local changes to the following files would be overwritten by checkout</div>
+        <p class="why"><b>Why:</b> you have uncommitted edits to files the other branch changes. Put them somewhere safe first.</p>
+<div class="code"><pre>git stash -u &amp;&amp; git switch other &amp;&amp; git stash pop
+<span class="c"># or bring the changes along / commit them:</span>
+git switch -c new-branch</pre></div></div>
+      <div class="card"><h3>“You are in detached HEAD state”</h3>
+        <div class="err">You are in 'detached HEAD' state. You can look around, make experimental changes…</div>
+        <p class="why"><b>Why:</b> you checked out a commit or tag rather than a branch. It’s harmless, but new commits won’t belong to any branch.</p>
+<div class="code"><pre>git switch -c keep-my-work   <span class="c"># keep commits made here</span>
+git switch main              <span class="c"># or just go back</span></pre></div></div>
+      <div class="card"><h3>Deleted a branch by accident</h3>
+        <p class="why"><code>git branch -D</code> prints the hash it deleted (<code>was a1b2c3d</code>). If that’s scrolled away, reflog has it.</p>
+<div class="code"><pre>git reflog | grep feature
+git branch feature a1b2c3d</pre></div></div>
+      <div class="card"><h3>Dropped or lost a stash</h3>
+        <p class="why">Stashes are commits, so they linger as dangling objects until garbage collection.</p>
+<div class="code"><pre>git fsck --no-reflog | awk '/dangling commit/ {print $3}' \
+  | xargs git log --no-walk --oneline --grep=WIP
+git stash apply &lt;sha&gt;</pre></div></div>
+      <div class="card"><h3>Wrong name or email on commits</h3>
+        <p class="why">Fix your config, then rewrite the affected (unpushed) commits.</p>
+<div class="code"><pre>git config user.email "right@example.com"
+git commit --amend --reset-author --no-edit   <span class="c"># last commit</span>
+git rebase -r main --exec "git commit --amend --reset-author --no-edit"</pre></div></div>
+      <div class="card"><h3>Undo a pushed merge on main</h3>
+        <p class="why">Don’t reset shared history. Revert it, keeping parent 1 (<code>main</code>) as the mainline.</p>
+<div class="code"><pre>git log --merges --oneline -5
+git revert -m 1 &lt;merge-sha&gt;
+git push</pre></div></div>
+      <div class="card"><h3>Need to bypass a hook</h3>
+        <p class="why">A <code>pre-commit</code> or <code>pre-push</code> hook is blocking an urgent fix. Use sparingly.</p>
+<div class="code"><pre>git commit --no-verify -m "Hotfix"
+git push --no-verify</pre></div></div>
+    </div>
+
+    <h3 class="group-h">Stuck states</h3>
+    <div class="grid">
+      <div class="card"><h3>Stuck mid-merge or mid-rebase</h3>
+        <div class="err">error: You have not concluded your merge (MERGE_HEAD exists).</div>
+        <p class="why"><b>Why:</b> a merge, rebase or cherry-pick stopped on a conflict. <code>git status</code> says which one; finish it or abort.</p>
+<div class="code"><pre>git status
+git merge --abort        <span class="c"># or --continue</span>
+git rebase --abort       <span class="c"># or --continue / --skip</span>
+git cherry-pick --abort</pre></div></div>
+      <div class="card"><h3>index.lock exists</h3>
+        <div class="err">fatal: Unable to create '.git/index.lock': File exists.</div>
+        <p class="why"><b>Why:</b> another Git process (often your editor) is running, or one crashed and left the lock behind. Make sure nothing is running, then remove it.</p>
+<div class="code"><pre>ps aux | grep -i git
+rm .git/index.lock</pre></div></div>
+      <div class="card"><h3>Not a git repository</h3>
+        <div class="err">fatal: not a git repository (or any of the parent directories): .git</div>
+        <p class="why"><b>Why:</b> you’re in the wrong folder, or the repo hasn’t been initialised.</p>
+<div class="code"><pre>pwd
+git rev-parse --show-toplevel   <span class="c"># where's the repo root?</span>
+git init                        <span class="c"># if it's meant to be new</span></pre></div></div>
+      <div class="card"><h3>Editor opened and you can’t get out</h3>
+        <p class="why">Git opened Vim for a commit or merge message. Type <code>:wq</code> and Enter to save, or <code>:cq</code> to abort. Then pick a friendlier editor:</p>
+<div class="code"><pre>git config --global core.editor "nano"
+git config --global core.editor "code --wait"</pre></div></div>
+    </div>
+
+    <h3 class="group-h">Files &amp; diffs</h3>
+    <div class="grid">
+      <div class="card"><h3>.gitignore isn’t ignoring a file</h3>
+        <p class="why"><b>Why:</b> <code>.gitignore</code> only affects <em>untracked</em> files. If it was committed before, Git keeps tracking it.</p>
+<div class="code"><pre>git rm --cached .env           <span class="c"># or -r for a folder</span>
+git commit -m "Stop tracking .env"
+git check-ignore -v .env       <span class="c"># confirm the rule matches</span></pre></div></div>
+      <div class="card"><h3>Whole file shows as changed</h3>
+        <p class="why"><b>Why:</b> usually line endings (CRLF vs LF) differing between Windows and macOS/Linux.</p>
+<div class="code"><pre>echo "* text=auto" &gt;&gt; .gitattributes
+git add --renormalize .
+git commit -m "Normalize line endings"
+git config --global core.autocrlf input   <span class="c"># mac/linux</span></pre></div></div>
+      <div class="card"><h3>Only file permissions changed</h3>
+        <div class="err">old mode 100644<br>new mode 100755</div>
+        <p class="why"><b>Why:</b> the executable bit flipped, often from copying files or using a shared drive.</p>
+<div class="code"><pre>git config core.fileMode false
+git diff --summary | grep mode</pre></div></div>
+      <div class="card"><h3>Renaming only the case of a file</h3>
+        <p class="why">On macOS and Windows the filesystem ignores case, so <code>readme.md → README.md</code> can go unnoticed. Use <code>git mv</code>:</p>
+<div class="code"><pre>git mv readme.md README.md
+<span class="c"># older Git: rename via a temporary name</span>
+git mv readme.md tmp &amp;&amp; git mv tmp README.md</pre></div></div>
+      <div class="card"><h3>Conflict in a lock file</h3>
+        <p class="why">Don’t hand-merge <code>package-lock.json</code>, <code>yarn.lock</code> and similar. Take one side and regenerate it.</p>
+<div class="code"><pre>git checkout --theirs package-lock.json
+npm install
+git add package-lock.json</pre></div></div>
+      <div class="card"><h3>Submodule folder is empty</h3>
+        <p class="why"><b>Why:</b> the repo was cloned without <code>--recurse-submodules</code>.</p>
+<div class="code"><pre>git submodule update --init --recursive
+git config --global submodule.recurse true</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 20 Debugging -->
+  <section id="debugging" data-search="debugging debug trace verbose diagnose slow network ssh curl config which troubleshoot">
+    <h2><span class="num">20</span>Debugging Git itself</h2>
+    <p class="lead">When Git does something you don’t expect, make it show its work.</p>
+    <div class="grid">
+      <div class="card"><h3>Trace what Git is doing</h3><p>Environment variables that turn on detailed logging for a single command.</p>
+<div class="code"><pre>GIT_TRACE=1 git pull               <span class="c"># commands &amp; aliases run</span>
+GIT_TRACE_PERFORMANCE=1 git status <span class="c"># where time goes</span>
+GIT_TRACE_SETUP=1 git status       <span class="c"># repo &amp; worktree discovery</span></pre></div></div>
+      <div class="card"><h3>Network &amp; auth problems</h3><p>See the HTTP or SSH conversation with the server.</p>
+<div class="code"><pre>GIT_CURL_VERBOSE=1 GIT_TRACE_CURL=1 git fetch
+GIT_SSH_COMMAND="ssh -v" git fetch
+git config --get-all credential.helper</pre></div></div>
+      <div class="card"><h3>“Where does this setting come from?”</h3><p>Find which config file sets a value, and what the result is.</p>
+<div class="code"><pre>git config --show-origin --get pull.rebase
+git config --list --show-scope
+git var -l | grep -i editor</pre></div></div>
+      <div class="card"><h3>Is it the alias, hook or Git?</h3><p>Rule out customisations one by one.</p>
+<div class="code"><pre>git config --get-regexp '^alias\.'
+ls .git/hooks | grep -v sample
+git -c core.hooksPath=/dev/null commit   <span class="c"># run without hooks</span>
+git --version</pre></div></div>
+      <div class="card"><h3>Slow repository</h3><p>Measure first, then tune.</p>
+<div class="code"><pre>git count-objects -vH
+git maintenance run --task=gc
+git config core.untrackedCache true
+git config feature.manyFiles true</pre></div></div>
+      <div class="card"><h3>Check repo health</h3><p>Verify integrity and bundle diagnostics for a bug report.</p>
+<div class="code"><pre>git fsck --full
+git diagnose -o ~/Desktop   <span class="c"># zip of repo stats</span>
+git bugreport               <span class="c"># system info template</span></pre></div></div>
+    </div>
+    <div class="note"><strong>Read the hints</strong>Git’s error output usually ends with a <code>hint:</code> telling you the exact command to run. <code>git status</code> is the best first step for almost any confusing state.</div>
+  </section>
+
+  <!-- 21 Ignore -->
   <section id="ignore" data-search="gitignore ignore exclude pattern untracked gitattributes check-ignore">
-    <h2><span class="num">19</span>.gitignore</h2>
+    <h2><span class="num">21</span>.gitignore</h2>
     <div class="grid">
       <div class="card"><h3>Pattern syntax</h3><p>One pattern per line.</p>
 <div class="code"><pre><span class="c"># comments start with #</span>
@@ -803,9 +1034,9 @@ git config --global core.excludesFile ~/.gitignore_global</pre></div></div>
     </div>
   </section>
 
-  <!-- 20 Refs -->
+  <!-- 22 Refs -->
   <section id="refs" data-search="revision syntax head tilde caret range double dot triple dot refs parent ancestor">
-    <h2><span class="num">20</span>Revision syntax</h2>
+    <h2><span class="num">22</span>Revision syntax</h2>
     <p class="lead">Ways to name a commit anywhere Git expects one.</p>
     <div class="table-wrap"><table>
       <thead><tr><th>Syntax</th><th>Meaning</th></tr></thead>
@@ -823,9 +1054,9 @@ git config --global core.excludesFile ~/.gitignore_global</pre></div></div>
     </table></div>
   </section>
 
-  <!-- 21 Workflows -->
+  <!-- 23 Workflows -->
   <section id="workflows" data-search="workflow github flow trunk based gitflow conventional commits pull request feature branch">
-    <h2><span class="num">21</span>Workflows</h2>
+    <h2><span class="num">23</span>Workflows</h2>
     <div class="grid">
       <div class="card"><h3>GitHub Flow</h3><p>Branch off <code>main</code>, open a pull request, review, merge, deploy. Simple and great for continuous delivery.</p>
 <div class="code"><pre>git switch -c feature/search
@@ -842,9 +1073,9 @@ feat!: drop Node 16 support</pre></div></div>
     </div>
   </section>
 
-  <!-- 22 Cheatsheet -->
+  <!-- 24 Cheatsheet -->
   <section id="cheatsheet" data-search="cheat sheet quick reference summary daily commands">
-    <h2><span class="num">22</span>Daily cheat sheet</h2>
+    <h2><span class="num">24</span>Daily cheat sheet</h2>
 <div class="code"><pre>git switch main &amp;&amp; git pull           <span class="c"># start fresh</span>
 git switch -c feature/thing            <span class="c"># new branch</span>
 git add -p                             <span class="c"># stage carefully</span>
@@ -933,6 +1164,10 @@ git reflog                             <span class="c"># when in doubt</span></p
       var show = secMatch || cardHit || sec.textContent.toLowerCase().includes(q);
       sec.classList.toggle('hidden', !show);
       if (show) any = true;
+    });
+    document.querySelectorAll('.group-h').forEach(function (h) {
+      var grid = h.nextElementSibling;
+      h.classList.toggle('hidden', !!q && !grid.querySelector('.card:not(.hidden)'));
     });
     hero.classList.toggle('hidden', !!q);
     document.getElementById('noResults').style.display = (q && !any) ? 'block' : 'none';
