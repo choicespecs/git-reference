@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branching — Git Reference</title>
+<meta name="description" content="Branches are cheap — a 41-byte file. Make one for every feature, fix or experiment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <a class="brand" href="index.html">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#e5532d"/><circle cx="11" cy="9" r="3" fill="#fff"/><circle cx="11" cy="23" r="3" fill="#fff"/><circle cx="22" cy="14" r="3" fill="#fff"/><path d="M11 12v8M22 17c0 4-5 4-8.5 5" stroke="#fff" stroke-width="2" fill="none"/></svg>
+    <span>Git Reference</span>
+  </a>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Search commands… (e.g. rebase, undo, stash)" autocomplete="off">
+    <kbd>/</kbd>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+</header>
+
+<div class="layout" id="top">
+<nav class="side" id="nav">
+  <h4>Foundations</h4>
+  <a href="mental-model.html">Mental model</a>
+  <a href="setup.html">Setup &amp; config</a>
+  <a href="starting.html">Starting a repo</a>
+  <h4>Everyday</h4>
+  <a href="snapshots.html">Staging &amp; committing</a>
+  <a href="inspecting.html">Inspecting history</a>
+  <a aria-current="page" class="active" href="branching.html">Branching</a>
+  <a href="merging.html">Merging &amp; rebasing</a>
+  <a href="remotes.html">Remotes &amp; collaboration</a>
+  <h4>Recovery</h4>
+  <a href="undoing.html">Undoing things</a>
+  <a href="stash.html">Stashing</a>
+  <a href="reflog.html">Reflog: the safety net</a>
+  <h4>Power tools</h4>
+  <a href="rewriting.html">Rewriting history</a>
+  <a href="cherry.html">Cherry-pick &amp; patches</a>
+  <a href="bisect.html">Bisect</a>
+  <a href="worktree.html">Worktrees</a>
+  <a href="tags.html">Tags &amp; releases</a>
+  <a href="submodules.html">Submodules &amp; sparse</a>
+  <a href="hooks.html">Hooks</a>
+  <h4>Troubleshooting</h4>
+  <a href="troubleshooting.html">Common problems</a>
+  <a href="debugging.html">Debugging Git itself</a>
+  <h4>Reference</h4>
+  <a href="ignore.html">.gitignore</a>
+  <a href="refs.html">Revision syntax</a>
+  <a href="workflows.html">Workflows</a>
+  <a href="cheatsheet.html">Cheat sheet</a>
+</nav>
+
+<main>
+  
+
+  
+<div class="crumbs"><a href="index.html">Git Reference</a> / Branching</div>
+<section id="branching" data-search="branch switch checkout create delete rename list detached head">
+    <h2><span class="num">06</span>Branching</h2>
+    <p class="lead">Branches are cheap — a 41-byte file. Make one for every feature, fix or experiment.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 640 150" width="640">
+        <path class="line" d="M40 100H520"/>
+        <path class="line alt" d="M220 100 C 260 100, 260 40, 300 40 H460"/>
+        <circle class="commit" cx="40" cy="100" r="11"/><circle class="commit" cx="130" cy="100" r="11"/>
+        <circle class="commit" cx="220" cy="100" r="11"/><circle class="commit" cx="370" cy="100" r="11"/>
+        <circle class="commit" cx="520" cy="100" r="11"/>
+        <circle class="commit alt" cx="300" cy="40" r="11"/><circle class="commit alt" cx="380" cy="40" r="11"/><circle class="commit alt" cx="460" cy="40" r="11"/>
+        <rect x="490" y="118" width="60" height="22" rx="5" fill="var(--text)"/><text class="tag" x="520" y="133" text-anchor="middle" fill="var(--bg)" style="fill:var(--bg)">main</text>
+        <rect x="420" y="6" width="80" height="22" rx="5" fill="var(--accent)"/><text class="tag" x="460" y="21" text-anchor="middle" style="fill:#fff">feature</text>
+        <text class="sub" x="560" y="44">← HEAD</text>
+      </svg>
+      <div class="diagram-caption">A feature branch diverging from <code>main</code>.</div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Create &amp; switch</h3><p><code>switch</code> is the modern, focused alternative to <code>checkout</code>.</p>
+<div class="code"><pre>git switch -c feature/login     <span class="c"># create + switch</span>
+git switch main
+git switch -                    <span class="c"># previous branch</span>
+git switch -c fix origin/fix    <span class="c"># track a remote branch</span></pre></div></div>
+      <div class="card"><h3>List branches</h3><p>Local, remote, merged or stale.</p>
+<div class="code"><pre>git branch -vv            <span class="c"># with upstream + last commit</span>
+git branch -a             <span class="c"># include remotes</span>
+git branch --merged main
+git branch --sort=-committerdate</pre></div></div>
+      <div class="card"><h3>Rename &amp; delete</h3><p>Clean up when you’re done.</p>
+<div class="code"><pre>git branch -m old-name new-name
+git branch -d feature      <span class="c"># safe: only if merged</span>
+git branch -D feature      <span class="c"># force</span>
+git push origin --delete feature</pre></div></div>
+      <div class="card"><h3>Detached HEAD</h3><p>Look around an old commit without a branch.</p>
+<div class="code"><pre>git switch --detach v1.2.0
+<span class="c"># made commits? keep them:</span>
+git switch -c rescue-branch</pre></div></div>
+    </div>
+  </section>
+<nav class="pager" aria-label="Previous and next"><a class="prev" href="inspecting.html"><small>← Previous</small>Inspecting history</a><a class="next" href="merging.html"><small>Next →</small>Merging &amp; rebasing</a></nav>
+
+
+  <footer>
+    Built as a learning reference. Official docs: <a href="https://git-scm.com/docs">git-scm.com/docs</a> · Free book: <a href="https://git-scm.com/book">Pro Git</a> · Run <code>git help &lt;command&gt;</code> for any command.
+  </footer>
+</main>
+</div>
+
+<script src="assets/site.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

@@ -4,4 +4,4 @@ A single-page, searchable learning reference for Git — from the mental model a
 
 **Live site:** https://choicespecs.github.io/git-reference/
 
-Features: instant search (press `/`), copy buttons on every snippet, light/dark theme, mobile-friendly layout. No build step — just `index.html`.
+Features: instant search (press `/`), copy buttons on every snippet, light/dark theme, mobile-friendly layout. No build step: one page per topic (`merging.html`, `undoing.html`, …), with `index.html` as the contents page and shared CSS/JS in `assets/`. Search covers every page through `assets/search-index.js`.

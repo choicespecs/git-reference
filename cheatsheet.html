@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet — Git Reference</title>
+<meta name="description" content="A practical, searchable reference for Git — from first commit to bisect, reflog, worktrees and history rewriting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <a class="brand" href="index.html">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#e5532d"/><circle cx="11" cy="9" r="3" fill="#fff"/><circle cx="11" cy="23" r="3" fill="#fff"/><circle cx="22" cy="14" r="3" fill="#fff"/><path d="M11 12v8M22 17c0 4-5 4-8.5 5" stroke="#fff" stroke-width="2" fill="none"/></svg>
+    <span>Git Reference</span>
+  </a>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Search commands… (e.g. rebase, undo, stash)" autocomplete="off">
+    <kbd>/</kbd>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+</header>
+
+<div class="layout" id="top">
+<nav class="side" id="nav">
+  <h4>Foundations</h4>
+  <a href="mental-model.html">Mental model</a>
+  <a href="setup.html">Setup &amp; config</a>
+  <a href="starting.html">Starting a repo</a>
+  <h4>Everyday</h4>
+  <a href="snapshots.html">Staging &amp; committing</a>
+  <a href="inspecting.html">Inspecting history</a>
+  <a href="branching.html">Branching</a>
+  <a href="merging.html">Merging &amp; rebasing</a>
+  <a href="remotes.html">Remotes &amp; collaboration</a>
+  <h4>Recovery</h4>
+  <a href="undoing.html">Undoing things</a>
+  <a href="stash.html">Stashing</a>
+  <a href="reflog.html">Reflog: the safety net</a>
+  <h4>Power tools</h4>
+  <a href="rewriting.html">Rewriting history</a>
+  <a href="cherry.html">Cherry-pick &amp; patches</a>
+  <a href="bisect.html">Bisect</a>
+  <a href="worktree.html">Worktrees</a>
+  <a href="tags.html">Tags &amp; releases</a>
+  <a href="submodules.html">Submodules &amp; sparse</a>
+  <a href="hooks.html">Hooks</a>
+  <h4>Troubleshooting</h4>
+  <a href="troubleshooting.html">Common problems</a>
+  <a href="debugging.html">Debugging Git itself</a>
+  <h4>Reference</h4>
+  <a href="ignore.html">.gitignore</a>
+  <a href="refs.html">Revision syntax</a>
+  <a href="workflows.html">Workflows</a>
+  <a aria-current="page" class="active" href="cheatsheet.html">Cheat sheet</a>
+</nav>
+
+<main>
+  
+
+  
+<div class="crumbs"><a href="index.html">Git Reference</a> / Cheat sheet</div>
+<section id="cheatsheet" data-search="cheat sheet quick reference summary daily commands">
+    <h2><span class="num">24</span>Daily cheat sheet</h2>
+<div class="code"><pre>git switch main &amp;&amp; git pull           <span class="c"># start fresh</span>
+git switch -c feature/thing            <span class="c"># new branch</span>
+git add -p                             <span class="c"># stage carefully</span>
+git commit -m "Describe the change"
+git fetch &amp;&amp; git rebase origin/main    <span class="c"># stay current</span>
+git push -u origin feature/thing       <span class="c"># share</span>
+git lg                                 <span class="c"># look around (alias)</span>
+git reflog                             <span class="c"># when in doubt</span></pre></div>
+  </section>
+<nav class="pager" aria-label="Previous and next"><a class="prev" href="workflows.html"><small>← Previous</small>Workflows</a></nav>
+
+
+  <footer>
+    Built as a learning reference. Official docs: <a href="https://git-scm.com/docs">git-scm.com/docs</a> · Free book: <a href="https://git-scm.com/book">Pro Git</a> · Run <code>git help &lt;command&gt;</code> for any command.
+  </footer>
+</main>
+</div>
+
+<script src="assets/site.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>
