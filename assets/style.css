@@ -262,3 +262,4 @@ footer { border-top: 1px solid var(--border); padding-top: 24px; color: var(--mu
 .search-results span{display:block;font-size:.85rem;opacity:.75}
 .search-results .none{padding:10px 14px;opacity:.7}
 @media (max-width:640px){.pager{grid-template-columns:1fr}.pager a.next{grid-column:1}}
+code,kbd,pre,samp{font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
